@@ -25,3 +25,11 @@ names(minGestacion) <- c("never", "smokes now", "until current pregnancy",
                          "once did, not now", "unknown")
 print("Cómo afecta fumar al minimo de dias de gestación:")
 print(minGestacion)
+
+# Determinamos si el numero de cigarrillos influye
+# más en gestación o en el peso del bebe al nacer
+corNumberGestacion<- abs(cor(babies$number, babies$gestation))
+corNumberPeso <- abs(cor(babies$number, babies$wt))
+if (corNumberGestacion > corNumberPeso) {
+  print("El número de cigarrillos influye más en la gestación")
+} else print("El número de cigarrillos influye más en el peso")
