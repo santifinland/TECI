@@ -4,3 +4,6 @@
 
 # RStudio Files
 *.Rproj
+
+# Matlab files
+*.asv
