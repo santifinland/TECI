@@ -1,0 +1,194 @@
+Outputs
+Hola
+
+MESS1 =
+
+El valor de x es: 
+
+
+x =
+
+    10
+
+
+MESS2 =
+
+El valor de x es: 10
+
+El valor de x es: 10
+
+ans =
+
+     2
+
+
+MESS1 =
+
+Se acabó!
+
+Se acabó!
+
+ans =
+
+     2
+
+
+MESS1 =
+
+Se acabó!
+
+Se acabó!
+
+ans =
+
+     2
+
+
+MESS1 =
+
+Se acabó!
+
+Se acabó!
+
+ans =
+
+     2
+
+
+MESS1 =
+
+Se acabó!
+
+Se acabó!
+
+ans =
+
+     2
+
+
+MESS1 =
+
+Se acabó!
+
+Se acabó!
+
+ans =
+
+     2
+
+
+MESS1 =
+
+Se acabó!
+
+Se acabó!
+
+ans =
+
+     2
+
+
+MESS1 =
+
+Se acabó!
+
+Se acabó!
+
+ans =
+
+     2
+
+
+MESS1 =
+
+Se acabó!
+
+Se acabó!
+
+ans =
+
+     2
+
+
+MESS1 =
+
+Se acabó!
+
+Se acabó!
+
+ans =
+
+     2
+
+
+MESS1 =
+
+Se acabó!
+
+Se acabó!
+
+ans =
+
+     2
+
+
+MESS1 =
+
+Se acabó!
+
+Se acabó!
+
+ans =
+
+     2
+
+
+MESS1 =
+
+Se acabó!
+
+Se acabó!
+
+ans =
+
+     2
+
+
+MESS1 =
+
+Se acabó!
+
+Se acabó!
+
+ans =
+
+     2
+
+
+MESS1 =
+
+Se acabó!
+
+Se acabó!
+
+ans =
+
+     2
+
+
+MESS1 =
+
+Se acabó!
+
+Se acabó!
+
+ans =
+
+     2
+
+
+MESS1 =
+
+Se acabó!
+
+Se acabó!
