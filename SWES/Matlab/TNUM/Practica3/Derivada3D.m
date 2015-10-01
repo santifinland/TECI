@@ -18,7 +18,7 @@ for i = 1 : length(x)
             i;
             j;
             k;
-            c(k, j, i) = func2([xgrid(k, j, i), ygrid(k, j, i), zgrid(k, j, i)]);
+            c(k, j, i) = func3([xgrid(k, j, i), ygrid(k, j, i), zgrid(k, j, i)]);
             grex = func3g([xgrid(k, j, i), ygrid(k, j, i), zgrid(k, j, i)]);
             gradx(k, j, i) = grex(1);
             grady(k, j, i) = grex(2);
@@ -59,7 +59,9 @@ end
 %quiver(x, y, gradtx, gradty)
 %title('Gradiente aproximado')
 disp('Errores en la aproximación del gradiente')
-gradx(1, 1, 1)
 
-[x, y, z] = getGrad3D(xgrid, ygrid, zgrid, gradx, grady, gradz, 0, 0, 0)
-[xt, yt, zt] = getGrad3D(xgrid, ygrid, zgrid, gradtx, gradty, gradtz, 0, 0, 0)
+[x, y, z] = getGrad3D(xgrid, ygrid, zgrid, gradx, grady, gradz, 0, 0, 0);
+[xt, yt, zt] = getGrad3D(xgrid, ygrid, zgrid, gradtx, gradty, gradtz, 0, 0, 0);
+
+[x, y, z]
+[xt, yt, zt]
