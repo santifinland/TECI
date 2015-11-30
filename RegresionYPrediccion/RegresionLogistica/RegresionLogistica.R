@@ -6,25 +6,28 @@ library(openxlsx)
 library(ggplot2)
 
 # Lectura de fichero de datos
-#datos <- read.xlsx('datos.xlsx', sheet="DATOS", startRow=1)
+datos <- read.xlsx('datos.xlsx', sheet="DATOS", startRow=1)
+
+hombres <- datos[datos$sex_invitador == "m"]
+mujeres <- datos[datos$sex_invitador == "f"]
 
 # Estimación de coeficientes de regresión para regresor bio
-bbio <- irls(datos$aceptados ~ datos$bio,
+bbiom <- irls(hombres$aceptados ~ hombres$bio,
             family = "poisson",
             link = "log",
-            data = datos)
+            data = hombres)
 
-f <- numeric(100)
-t <- numeric(100)
-for (i in seq(from = 0, to = 100, by = 1)) {
+f <- numeric(10000)
+t <- numeric(10000)
+for (i in seq(from = 0, to = 10000, by = 1)) {
   t[i] <- i
-  f[i] <- 1 / (1 + exp(-(bbio$coefficients[1] + bbio$coefficients[2] * i)))
+  f[i] <- 1 / (1 + exp(-(bbiom$coefficients[1] + bbiom$coefficients[2] * i)))
 }
 res <- data.frame(f, t)
 
 g <- ggplot(res, aes(t, f)) +
   geom_line(alpha = 1) +
-  xlim(0, 100) + ylim(0, 1) +
+  xlim(0, 10000) + ylim(0, 1) +
   xlab("Numero de palabras en autobiografía") + ylab("Probabilidad") +
   ggtitle("Regresión logística biografía") +
   theme_bw()
@@ -102,5 +105,30 @@ g <- ggplot(res, aes(t, f)) +
   xlim(-35, 90) + ylim(0, 1) +
   xlab("Diferencia de edad") + ylab("Probabilidad") +
   ggtitle("Regresión logística diferencia de edad") +
+  theme_bw()
+print(g)
+
+
+# Estimación de coeficientes de regresión para regresor tamaño de grupo
+bgrupo <- irls(datos$aceptados ~ datos$g11 + datos$g12,
+                 family = "poisson",
+                 link = "log",
+                 data = datos)
+
+f <- numeric(125, 2)
+t <- numeric(125, 2)
+for (i in seq(from = 0, to = 1, by = 1)) {
+  for (j in seq(from = 0, to = 1, by = 1)) {
+    t[i] <- i
+    f[i] <- 1 / (1 + exp(-(bgrupo$coefficients[1] + bgrupo$coefficients[2] * i + bgrupo$coefficients[3] * i)))
+  }
+}
+res <- data.frame(f, t)
+
+g <- ggplot(res, aes(t, f)) +
+  geom_line(alpha = 1) +
+  xlim(-1, 1) + ylim(0, 1) +
+  xlab("Tamaño del grupo") + ylab("Probabilidad") +
+  ggtitle("Regresión logística tamaño de grupo") +
   theme_bw()
 print(g)
