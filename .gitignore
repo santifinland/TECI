@@ -7,3 +7,6 @@
 
 # Matlab files
 *.asv
+
+# Images
+*.jpg
