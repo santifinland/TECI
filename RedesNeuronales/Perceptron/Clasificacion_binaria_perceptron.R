@@ -33,7 +33,7 @@ Sigma1 <- matrix(c(0.7,0.3,0.3,0.5), nrow=2, ncol=2, byrow=TRUE, dimnames=NULL)
 ########################################
 
 #Numero de muestras de clase 0 y 1
-n0 <- 25
+n0 <- 25 
 n1 <- 25
 
 # Genero muestras
