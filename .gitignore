@@ -10,3 +10,13 @@
 
 # Images
 *.jpg
+
+# XML
+*.xml
+
+# Images
+*.png
+*.jpg
+
+# Csv
+*.csv
