@@ -5,6 +5,10 @@
 # RStudio Files
 *.Rproj
 
+# Intellig Files
+*.iml
+*.idea
+
 # Matlab files
 *.asv
 
@@ -20,3 +24,6 @@
 
 # Csv
 *.csv
+
+# Python
+*.pyc
