@@ -114,7 +114,6 @@ class MLP_Classifier(object):
         else:
             raise ValueError('Choose a compatible output layer activation or check your spelling ;-p')
 
-
         return self.ao
 
     def backPropagate(self, targets):
@@ -230,9 +229,9 @@ def demo():
         fd = FaceDetector.FaceDetector()
         if validate == True:
             print "validating"
-            pat = fd.getPat(True)
+            pat = fd.getData(face=False, nose=False, proportions=True, validate=True)
         else:
-            pat = fd.getPat()
+            pat = fd.getData(face=False, nose=False, proportions=True, validate=True)
 
         #y = data[:,0:10]
         y = pat[:,0:70]
@@ -246,17 +245,10 @@ def demo():
         #data = fd.pca(pat[:,100:], 70)
         print "Data"
         print data
+
         data = scale(data)
 
-        ff = file("data4100.csv", "w")
-        #for i in range(int(fd.faces)):
-            #print y[i]
-            #e = [k for k, j in enumerate(y[i]) if j == max(y[i])]
-            #ff.write("%s ->" % e)
-            #ff.write("%s \n" % data[i])
-        #ff.close()
         out = []
-        #print data.shape
 
         # populate the tuple list with the data
         for i in range(data.shape[0]):
@@ -272,7 +264,8 @@ def demo():
     #print X[2] # make sure the data looks right
 
     fd = FaceDetector.FaceDetector()
-    NN = MLP_Classifier(fd.pixels * fd.pixels, fd.pixels * fd.pixels, 70, iterations = 50, learning_rate = 0.01,
+    #NN = MLP_Classifier(fd.pixels * fd.pixels, fd.pixels * fd.pixels, 70, iterations = 50, learning_rate = 0.05,
+    NN = MLP_Classifier(3, 100, 70, iterations = 50, learning_rate = 0.02,
                         momentum = 0.01, rate_decay = 0.0001,
                         output_layer = 'logistic')
 
