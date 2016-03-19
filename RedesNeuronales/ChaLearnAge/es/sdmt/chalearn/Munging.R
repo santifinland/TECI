@@ -112,6 +112,10 @@ gmouthnosedistances<- ggplot(mouthnosedistances, aes(x=age, y=cleandistance)) +
   theme_bw()
 print(gmouthnosedistances)
 
-# Build proportions file
-
-
+# Build selection file
+good <- as.data.frame(cbind(
+  good, 
+  s = mapply(function(p, f, n) if (p == n | n / f > 0.3) { 0.1 } else n / f,
+             facenoseproportions$areaphoto,
+             facenoseproportions$areaface,
+             facenoseproportions$areanose)))
