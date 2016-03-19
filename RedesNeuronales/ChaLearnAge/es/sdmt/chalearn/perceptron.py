@@ -1,81 +1,55 @@
-import time
-import random
-import numpy as np
+# -*- coding: utf-8 -*-
+
+# Master TECI
+# Neural Networks and Statistical Learning
+# Multilayer Perceptron
+# Inspired in https://github.com/FlorianMuellerklein/Machine-Learning
+
+
 import FaceDetector
-np.seterr(all = 'ignore')
+import numpy as np
+import random
+from sklearn.preprocessing import scale
+#np.seterr(all = 'ignore')
 
-# transfer functions
-def sigmoid(x):
-    return 1 / (1 + np.exp(-x))
 
-# derivative of sigmoid
-def dsigmoid(y):
-    return y * (1.0 - y)
+class MultilayerPerceptron(object):
 
-# using softmax as output layer is recommended for classification where outputs are mutually exclusive
-def softmax(w):
-    e = np.exp(w - np.amax(w))
-    dist = e / np.sum(e)
-    return dist
-
-# using tanh over logistic sigmoid for the hidden layer is recommended
-def tanh(x):
-    return np.tanh(x)
-
-# derivative for tanh sigmoid
-def dtanh(y):
-    return 1 - y*y
-
-class MLP_Classifier(object):
-    """
-    Basic MultiLayer Perceptron (MLP) neural network with regularization and learning rate decay
-    Consists of three layers: input, hidden and output. The sizes of input and output must match data
-    the size of hidden is user defined when initializing the network.
-    The algorithm can be used on any dataset.
-    As long as the data is in this format: [[[x1, x2, x3, ..., xn], [y1, y2, ..., yn]],
-                                           [[[x1, x2, x3, ..., xn], [y1, y2, ..., yn]],
-                                           ...
-                                           [[[x1, x2, x3, ..., xn], [y1, y2, ..., yn]]]
-    An example is provided below with the digit recognition dataset provided by sklearn
-    Fully pypy compatible.
-    """
-    def __init__(self, input, hidden, output, iterations = 50, learning_rate = 0.01,
-                 l2_in = 0, l2_out = 0, momentum = 0, rate_decay = 0,
-                 output_layer = 'logistic', verbose = True):
+    def __init__(self, input, hidden, output, iterations=50, learning_rate=0.01,
+                 hl_in=0, hl_out=0, momentum=0.0, rate_decay=0.0, verbose=False):
         """
         :param input: number of input neurons
         :param hidden: number of hidden neurons
         :param output: number of output neurons
-        :param iterations: how many epochs
+        :param iterations: maximum number of iterations
         :param learning_rate: initial learning rate
-        :param l2: L2 regularization term
+        :param hl_in: regularization term for hidden layer input
+        :param hl_out: regularization term for hidden layer output
         :param momentum: momentum
         :param rate_decay: how much to decrease learning rate by on each iteration (epoch)
-        :param output_layer: activation (transfer) function of the output layer
-        :param verbose: whether to spit out error rates while training
+        :param verbose: shows different messages
         """
-        # initialize parameters
+        # Initialize parameters
         self.iterations = iterations
         self.learning_rate = learning_rate
-        self.l2_in = l2_in
-        self.l2_out = l2_out
+        self.l2_in = hl_in
+        self.l2_out = hl_out
         self.momentum = momentum
         self.rate_decay = rate_decay
         self.verbose = verbose
-        self.output_activation = output_layer
 
-        # initialize arrays
-        self.input = input + 1 # add 1 for bias node
+        # Initialize neural network layers
+        self.input = input + 1
         self.hidden = hidden
         self.output = output
 
-        # set up array of 1s for activations
+        # Set up array of 1s for activations
         self.ai = np.ones(self.input)
         self.ah = np.ones(self.hidden)
         self.ao = np.ones(self.output)
 
-        # create randomized weights
-        # use scheme from Efficient Backprop by LeCun 1998 to initialize weights for hidden layer
+        # Create randomized weights
+        # Use scheme from Efficient Backpropagation by LeCun 1998 to initialize weights for hidden layer
         input_range = 1.0 / self.input ** (1/2)
         self.wi = np.random.normal(loc = 0, scale = input_range, size = (self.input, self.hidden))
         self.wo = np.random.uniform(size = (self.hidden, self.output)) / np.sqrt(self.hidden)
@@ -85,6 +59,24 @@ class MLP_Classifier(object):
         # based on how much the weights need to change in the following iteration
         self.ci = np.zeros((self.input, self.hidden))
         self.co = np.zeros((self.hidden, self.output))
+
+        self.error_edad = 0
+
+    # transfer functions
+    def sigmoid(self, x):
+        return 1 / (1 + np.exp(-x))
+
+    # derivative of sigmoid
+    def dsigmoid(self, y):
+        return y * (1.0 - y)
+
+    # using tanh over logistic sigmoid for the hidden layer is recommended
+    def tanh(self, x):
+        return np.tanh(x)
+
+    # derivative for tanh sigmoid
+    def dtanh(self, y):
+         return 1 - y * y
 
     def feedForward(self, inputs):
         """
@@ -96,23 +88,18 @@ class MLP_Classifier(object):
         :return: updated activation output vector
         """
         if len(inputs) != self.input-1:
-            raise ValueError('Wrong number of inputs you silly goose!')
+            raise ValueError('Wrong number of inputs!')
 
         # input activations
         self.ai[0:self.input -1] = inputs
 
         # hidden activations
         sum = np.dot(self.wi.T, self.ai)
-        self.ah = tanh(sum)
+        self.ah = self.tanh(sum)
 
         # output activations
         sum = np.dot(self.wo.T, self.ah)
-        if self.output_activation == 'logistic':
-            self.ao = sigmoid(sum)
-        elif self.output_activation == 'softmax':
-            self.ao = softmax(sum)
-        else:
-            raise ValueError('Choose a compatible output layer activation or check your spelling ;-p')
+        self.ao = self.sigmoid(sum)
 
         return self.ao
 
@@ -121,73 +108,62 @@ class MLP_Classifier(object):
         For the output layer
         1. Calculates the difference between output value and target value
         2. Get the derivative (slope) of the sigmoid function in order to determine how much the weights need to change
-        3. update the weights for every node based on the learning rate and sig derivative
+        3. Update the weights for every node based on the learning rate and sig derivative
         For the hidden layer
-        1. calculate the sum of the strength of each output link multiplied by how much the target node has to change
-        2. get derivative to determine how much weights need to change
-        3. change the weights based on learning rate and derivative
+        1. Calculate the sum of the strength of each output link multiplied by how much the target node has to change
+        2. Get derivative to determine how much weights need to change
+        3. Change the weights based on learning rate and derivative
         :param targets: y values
-        :param N: learning rate
         :return: updated weights
         """
         if len(targets) != self.output:
-            raise ValueError('Wrong number of targets you silly goose!')
+            raise ValueError('Wrong number of targets!')
 
-        # calculate error terms for output
-        # the delta (theta) tell you which direction to change the weights
-        if self.output_activation == 'logistic':
-            output_deltas = dsigmoid(self.ao) * -(targets - self.ao)
-        elif self.output_activation == 'softmax':
-            output_deltas = -(targets - self.ao)
-        else:
-            raise ValueError('Choose a compatible output layer activation or check your spelling ;-p')
+        # Calculate error terms for output
+        # The delta (theta) tell you which direction to change the weights
+        output_deltas = self.dsigmoid(self.ao) * -(targets - self.ao)
 
-            # calculate error terms for hidden
-        # delta (theta) tells you which direction to change the weights
+        # Calculate error terms for hidden
+        # Delta (theta) tells you which direction to change the weights
         error = np.dot(self.wo, output_deltas)
-        hidden_deltas = dtanh(self.ah) * error
+        hidden_deltas = self.dtanh(self.ah) * error
 
-        # update the weights connecting hidden to output, change == partial derivative
-        change = output_deltas * np.reshape(self.ah, (self.ah.shape[0],1))
+        # Update the weights connecting hidden to output, change == partial derivative
+        change = output_deltas * np.reshape(self.ah, (self.ah.shape[0], 1))
         regularization = self.l2_out * self.wo
         self.wo -= self.learning_rate * (change + regularization) + self.co * self.momentum
         self.co = change
 
-        # update the weights connecting input to hidden, change == partial derivative
+        # Update the weights connecting input to hidden, change == partial derivative
         change = hidden_deltas * np.reshape(self.ai, (self.ai.shape[0], 1))
         regularization = self.l2_in * self.wi
         self.wi -= self.learning_rate * (change + regularization) + self.ci * self.momentum
         self.ci = change
 
         # calculate error
-        if self.output_activation == 'softmax':
-            error = -sum(targets * np.log(self.ao))
-        elif self.output_activation == 'logistic':
-            error = sum(0.5 * (targets - self.ao)**2)
+        error = sum(0.5 * (targets - self.ao)**2)
 
         return error
 
     def test(self, patterns):
         """
-        Currently this will print out the targets next to the predictions.
-        Not useful for actual ML, just for visual inspection.
+        Print out the targets next to the predictions.
+        Calculate total error.
         """
+        self.error_edad = 0
         for p in patterns:
-            e = [i for i, j in enumerate(p[1]) if j == max(p[1])]
+            e = self.get_age(p[1])
             l = self.feedForward(p[0])
-            c = [i for i, j in enumerate(l) if j == max(l)]
-            print(e[0], '->', sum(c) / len(c), "===", c)
-            #print(p[1], '->', self.feedForward(p[0]))
+            c = self.get_age(l)
+            #print(e[0], '->', sum(c) / len(c), "===", c)
+            self.error_edad += abs((e[0] - (sum(c) / len(c))))
+        print "Error Total: " + str(self.error_edad / len(patterns))
 
     def fit(self, patterns):
-        if self.verbose == True:
-            if self.output_activation == 'softmax':
-                print 'Using softmax activation in output layer'
-            elif self.output_activation == 'logistic':
-                print 'Using logistic sigmoid activation in output layer'
-
+        """
+        Train neural network
+        """
         num_example = np.shape(patterns)[0]
-
         for i in range(self.iterations):
             error = 0.0
             random.shuffle(patterns)
@@ -201,12 +177,12 @@ class MLP_Classifier(object):
                 errorfile.write(str(error) + '\n')
                 errorfile.close()
 
-            if i % 10 == 0 and self.verbose == True:
+            if i % 1 == 0 and self.verbose == True:
                 error = error/num_example
                 print('Training error %-.5f' % error)
 
             # learning rate decay
-            self.learning_rate = self.learning_rate * (self.learning_rate / (self.learning_rate + (self.learning_rate * self.rate_decay)))
+            self.learning_rate *= (self.learning_rate / (self.learning_rate + (self.learning_rate * self.rate_decay)))
 
     def predict(self, X):
         """
@@ -217,10 +193,16 @@ class MLP_Classifier(object):
             predictions.append(self.feedForward(p))
         return predictions
 
-def demo():
-    from sklearn.preprocessing import scale
+    def get_age(self, a):
+        """
+        Convert age in array format to decimal format
+        """
+        return [i + 1 for i, j in enumerate(a) if j == max(a)]
+
+
+def run():
     """
-    run NN demo on the digit recognition dataset from sklearn
+    Fit neural network
     """
     def load_data(validate = False):
         #data = np.loadtxt('sklearn_digits.csv', delimiter = ',')
@@ -228,23 +210,20 @@ def demo():
         # first ten values are the one hot encoded y (target) values
         fd = FaceDetector.FaceDetector()
         if validate == True:
-            print "validating"
-            pat = fd.getData(face=False, nose=False, proportions=True, validate=True)
+            #pat = fd.getData(face=False, nose=False, proportions=True, validate=True)
+            pat = fd.getData(face=False, nose=True, proportions=False, validate=True)
         else:
-            pat = fd.getData(face=False, nose=False, proportions=True, validate=True)
+            #pat = fd.getData(face=False, nose=False, proportions=True, validate=False)
+            pat = fd.getData(face=False, nose=True, proportions=False, validate=False)
 
         #y = data[:,0:10]
-        y = pat[:,0:70]
-        print "Y"
-        print sum(y)
-        if validate == True:
-            print y
+        y = pat[:,0:fd.segments - fd.margin]
+        #print y
 
         #data = data[:,10:] # x data
-        data = pat[:,70:]
-        #data = fd.pca(pat[:,100:], 70)
-        print "Data"
-        print data
+        data = pat[:,fd.segments - fd.margin:]
+        #print "Data"
+        #print data
 
         data = scale(data)
 
@@ -257,27 +236,37 @@ def demo():
 
         return out
 
-    start = time.time()
-
     X = load_data()
 
     #print X[2] # make sure the data looks right
 
     fd = FaceDetector.FaceDetector()
-    #NN = MLP_Classifier(fd.pixels * fd.pixels, fd.pixels * fd.pixels, 70, iterations = 50, learning_rate = 0.05,
-    NN = MLP_Classifier(3, 100, 70, iterations = 50, learning_rate = 0.02,
-                        momentum = 0.01, rate_decay = 0.0001,
-                        output_layer = 'logistic')
+    proportions = False
+    face = False
+    if proportions:
+        input_layer_length = 3
+        hidden_layer_length = 200
+    else:
+        if face:
+            input_layer_length = fd.pixelsFace * fd.pixelsFace
+            hidden_layer_length = fd.pixelsFace * fd.pixelsFace
+        else:
+            input_layer_length = fd.pixelsNose * fd.pixelsNose
+            hidden_layer_length = fd.pixelsNose * fd.pixelsNose
 
-    NN.fit(X)
+    nn = MultilayerPerceptron(input_layer_length,
+                        hidden_layer_length,
+                        fd.segments - fd.margin,
+                        iterations=50,
+                        learning_rate=0.005,
+                        momentum=0.001,
+                        rate_decay=0.0001)
+    nn.fit(X)
 
-    end = time.time()
-    print end - start
-
-    NN.test(X)
+    nn.test(X)
     Z = load_data(True)
     print "Test validation"
-    NN.test(Z)
+    nn.test(Z)
 
 if __name__ == '__main__':
-    demo()
+    run()

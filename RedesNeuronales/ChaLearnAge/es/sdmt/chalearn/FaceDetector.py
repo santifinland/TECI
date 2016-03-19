@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 
 # Master TECI
+# Neural Networks and Statistical Learning
 # Face Detector to extract different face features from images
 
 
 import cv2
 import numpy as np
-import math
 import Point
+import random
 import sys, traceback
 
 
@@ -27,14 +28,18 @@ class FaceDetector:
         self.pixelsFace = 0.0
         self.pixelsNose = 50.0
         self.faces = 4000.0
-        self.maxItemsTrain = 4000.0
-        self.maxItemsValidate = 4000.0
-        self.facesValidate = 100.0
-        self.fileTrain = "train_gtregre1.csv"
-        self.fileValidate = "train_gtregre2.csv"
+        self.maxItems = 4000.0
+        self.fileGroundTruth = "train_gt.csv"
+        self.fileTrain = "train1.csv"
+        self.fileValidate = "validate1.csv"
+        self.fileTest = "test.csv"
         self.fileProportionsNose = "proportionnose.csv"
         self.fileDistancesEyeNose = "distancenoseeye.csv"
         self.fileDistancesMouthNose = "distancemouthnose.csv"
+        self.segments = 100
+        self.margin = 30
+        self.elementsPerSegment = 15
+        self.sobremuestreo = True
 
     ''' Load image in to memory '''
     def getimage(self, path):
@@ -126,7 +131,7 @@ class FaceDetector:
                 image = self.getimage("../../../img/face/" + str(trio[0]))
                 print trio
                 f = self.getface(image)
-                rf = self.resize(f, self.pixels)
+                rf = self.resize(f, self.pixelsFace)
                 cv2.imwrite("../../../img/resizedface2/" + str(trio[0]), rf)
             except Exception:
                 print "Fallo"
@@ -140,7 +145,7 @@ class FaceDetector:
                 image = self.getimage("../../../img/nose/" + str(trio[0]))
                 print trio
                 n = self.getface(image)
-                rn = self.resize(n, self.pixels)
+                rn = self.resize(n, self.pixelsNose)
                 cv2.imwrite("../../../img/resizednose/" + str(trio[0]), rn)
             except Exception:
                 print "Fallo"
@@ -322,72 +327,93 @@ class FaceDetector:
     '''                                     '''
 
     ''' Get age from a ground truth file '''
-    def getage(self, path):
+    def getage(self, path, gtfile):
         image = path[-10:]
-        l = self.readfile(self.fileTrain)
+        l = self.readfile(gtfile)
         age = 0.0
         for line in l:
             trio = line.split(",")
             if (trio[0] == image):
                 age = trio[1]
-        if int(float(age)) > int(69):
-            age = 70
-        return age
-
-    ''' Get age from a ground truth validation file '''
-    def getageValidate(self, path):
-        image = path[-10:]
-        l = self.readfile(self.fileValidate)
-        age = 0.0
-        for line in l:
-            trio = line.split(",")
-            if (trio[0] == image):
-                age = trio[1]
-        if int(float(age)) > int(69):
+        if int(round(float(age))) > int(69):
             age = 70
         return age
 
     ''' Get age coded from as a vector: binary indicator of a group '''
-    def getagecoded(self, age):
-        p = [0] * int(71)
-        p[int(math.ceil(float(age)))] = 1
+    def getagecodedToSegment(self, age, segments):
+        p = [0] * (int(segments) + 1 - self.margin)
+        a = self.getAgeToSegment(age, segments)
+        p[int(round(float(a)))] = 1
         return p
 
     ''' Get age in segments coded as a vector: binary indicator of a group '''
-    def getAgeToSegment(self, age):
-        return round(float(age) / 5.0) * 5.0 - 3.0
+    def getAgeToSegment(self, age, segments):
+        return round(float(age) / int((100.0 / segments)))
+
+    def getagefromarray(self, a):
+        return [i for i, j in enumerate(a) if j == max(a)][0]
+
+    def getDataFromAge(self, data, age):
+        y = data[:,0:self.segments - self.margin]
+        ages = map(lambda a: self.getagefromarray(a), y)
+        selected = [i for i,x in enumerate(ages) if x == age]
+        return data[random.choice(selected), ]
+
 
     '''                                                          '''
     ''' Get matrix of data to train or validate a neural network '''
     '''                                                          '''
     def getData(self, face=False, nose=False, proportions=True, validate=False):
+
+        # Read lines from train or validation file
         path = self.fileTrain
-        if validate == True:
+        if validate:
             path = self.fileValidate
         lines = self.readfile(path)
+
+        # Prepare empty matrix for storing extracted features
         if proportions:
-            pat = np.empty([self.maxItemsTrain, 3 + 71])
+            pat = np.empty([self.maxItems, 3 + self.segments + 1 - self.margin])
         else:
-            pat = np.empty([self.maxItemsTrain, self.pixels * self.pixels + 71])
+            if face:
+                pat = np.empty([self.maxItems, self.pixelsFace * self.pixelsFace + self.segments + 1 - self.margin])
+            else:
+                pat = np.empty([self.maxItems, self.pixelsNose * self.pixelsNose + self.segments + 1 - self.margin])
+
+        # Prepare empty array for storing ages
+        ages = [0] * (self.segments + 1 - self.margin)
+
+        # Counter to keep track of items in each group
         i = 0
-        ages = [0] * 71
-        maxItems = self.maxItemsTrain
-        if validate:
-            maxItems = self.maxItemsValidate
+
+        # Read data
         for line in lines:
             try:
+
                 # Get name of the image
                 trio = line.split(",")
-                age = self.getage("../../../img/" + trio[0])
+
+                # Get the tagged age of the image
+                age = self.getage("../../../img/" + trio[0], self.fileGroundTruth)
                 if validate:
-                    age = self.getageValidate("../../../img/" + trio[0])
-                a = self.getagecoded(age)
-                ages_counter = [sum(x) for x in zip(ages, a)]
-                if max(ages_counter) < 16:
-                    ages = [sum(x) for x in zip(ages, a)]
+                    age = self.getage("../../../img/" + trio[0], self.fileValidate)
+
+                # Code the age in a binary array
+                #a = self.getagecoded(age)
+                a = self.getagecodedToSegment(age, self.segments)
+
+                #ages_counter = [sum(x) for x in zip(ages, a)]
+                #print "==="
+                #print age
+                #print a
+                #print ages[int(round(float(self.getAgeToSegment(age, self.segments))))]
+                #if max(ages) < 16:
+                if ages[int(round(float(self.getAgeToSegment(age, self.segments))))] < self.elementsPerSegment:
                     vface = self.rawimage2vector("../../../img/resizedface/" + str(trio[0]))
                     vnose = self.rawimage2vector("../../../img/resizednose/" + str(trio[0]))
                     vproportions = self.getVectorOfProportions(str(trio[0]))
+                    ages = [sum(x) for x in zip(ages, a)]
+                    #print ages
                     if face and nose:
                         pat[i] = a + vface + vnose
                     elif face:
@@ -397,14 +423,37 @@ class FaceDetector:
                     else:
                         pat[i] = a + vnose
                     i = i + 1
-                    if i >= maxItems:
-                        break
             except Exception:
-                print "Fallo"
-                traceback.print_exc(file=sys.stdout)
-        print pat
+                continue
+                #print "Fallo"
+                #traceback.print_exc(file=sys.stdout)
+        print ages
+        if (not validate) & (self.sobremuestreo):
+            (pat, i, ages) = self.fillWithSameData(pat, ages, i)
         pat = pat[:][:i]
         print ages
-        print sum(ages)
-        print len(ages)
         return pat[:,1:]
+
+    def fillWithSameData(self, data, ages, i):
+        for age in range(1,self.segments):
+            print "Age: " + str(age)
+            try:
+                diff =  ages[int(round(float(self.getAgeToSegment(age, self.segments))))] - self.elementsPerSegment
+                print "Diff: " + str(diff)
+                if diff < 0:
+                    for j in range(-diff):
+                        print "J: " + str(j)
+                        data[i] = self.getDataFromAge(data, age)
+                        a = self.getagecodedToSegment(age, self.segments)
+                        ages = [sum(x) for x in zip(ages, a)]
+                        i = i + 1
+                else:
+                    continue
+            except Exception:
+                continue
+        return (data, i, ages)
+
+#fd = FaceDetector()
+#data = fd.getData(face=False, nose=False, proportions=True, validate=False)
+#fd.getDataFromAge(data, 1)
+#fd.getagecodedToSegment(15, 20.0)
