@@ -1,8 +1,9 @@
 # Get Neural network files
-wget https://github.com/santifinland/TECI/tree/master/RedesNeuronales/ChaLearnAge/es/sdmt/chalearn/FaceDetector.py
-wget https://github.com/santifinland/TECI/tree/master/RedesNeuronales/ChaLearnAge/es/sdmt/chalearn/perceptron.py
-wget https://github.com/santifinland/TECI/tree/master/RedesNeuronales/ChaLearnAge/es/sdmt/chalearn/Munging.R
-wget https://github.com/santifinland/TECI/tree/master/RedesNeuronales/ChaLearnAge/es/sdmt/chalearn/Point.py
+wget https://raw.githubusercontent.com/santifinland/TECI/master/RedesNeuronales/ChaLearnAge/es/sdmt/chalearn/FaceDetector.py
+wget https://raw.githubusercontent.com/santifinland/TECI/master/RedesNeuronales/ChaLearnAge/es/sdmt/chalearn/perceptron.py
+wget https://raw.githubusercontent.com/santifinland/TECI/master/RedesNeuronales/ChaLearnAge/es/sdmt/chalearn/Munging.R
+wget https://raw.githubusercontent.com/santifinland/TECI/master/RedesNeuronales/ChaLearnAge/es/sdmt/chalearn/Point.py
+wget https://raw.githubusercontent.com/santifinland/TECI/master/RedesNeuronales/ChaLearnAge/es/sdmt/chalearn/__init__.py
 
 # Get gt files
 curl -L -o train1.csv https://www.dropbox.com/s/ivaat4kticvbrkx/train1.csv?dl=1
@@ -18,14 +19,14 @@ curl -L -o distancemouthnose.csv https://www.dropbox.com/s/jg27zne4eq0r2rf/dista
 
 
 # Get haarscade masks
-wget https://github.com/Itseez/opencv/tree/master/data/haarcascades/haarcascade_frontalface_default.xml
-wget https://github.com/Itseez/opencv/tree/master/data/haarcascades/haarcascade_mcs_mouth.xml
-wget https://github.com/Itseez/opencv/tree/master/data/haarcascades/haarcascade_smile.xml
-wget https://github.com/Itseez/opencv/tree/master/data/haarcascades/haarcascade_righteye_2splits.xml
-wget https://github.com/Itseez/opencv/tree/master/data/haarcascades/haarcascade_lefteye_2splits.xml
-wget https://github.com/Itseez/opencv/tree/master/data/haarcascades/haarcascade_mcs_nose.xml
-wget https://github.com/Itseez/opencv/tree/master/data/haarcascades/haarcascade_lowerbody.xml
-wget https://github.com/Itseez/opencv/tree/master/data/haarcascades/haarcascade_mcs_rightear.xml
-wget https://github.com/Itseez/opencv/tree/master/data/haarcascades/haarcascade_mcs_leftear.xml
+wget https://raw.githubusercontent.com/Itseez/opencv/tree/master/data/haarcascades/haarcascade_frontalface_default.xml
+wget https://raw.githubusercontent.com/Itseez/opencv/tree/master/data/haarcascades/haarcascade_mcs_mouth.xml
+wget https://raw.githubusercontent.com/Itseez/opencv/tree/master/data/haarcascades/haarcascade_smile.xml
+wget https://raw.githubusercontent.com/Itseez/opencv/tree/master/data/haarcascades/haarcascade_righteye_2splits.xml
+wget https://raw.githubusercontent.com/Itseez/opencv/tree/master/data/haarcascades/haarcascade_lefteye_2splits.xml
+wget https://raw.githubusercontent.com/Itseez/opencv/tree/master/data/haarcascades/haarcascade_mcs_nose.xml
+wget https://raw.githubusercontent.com/Itseez/opencv/tree/master/data/haarcascades/haarcascade_lowerbody.xml
+wget https://raw.githubusercontent.com/Itseez/opencv/tree/master/data/haarcascades/haarcascade_mcs_rightear.xml
+wget https://raw.githubusercontent.com/Itseez/opencv/tree/master/data/haarcascades/haarcascade_mcs_leftear.xml
 
 
