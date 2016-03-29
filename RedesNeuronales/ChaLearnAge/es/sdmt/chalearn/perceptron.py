@@ -6,16 +6,13 @@
 # Inspired in https://github.com/FlorianMuellerklein/Machine-Learning
 
 
-import FaceDetector
 import numpy as np
 import random
-from sklearn.preprocessing import scale
-#np.seterr(all = 'ignore')
 
 
 class MultilayerPerceptron(object):
 
-    def __init__(self, input, hidden, output, iterations=50, learning_rate=0.01,
+    def __init__(self, input, hidden, output, iterations=20, learning_rate=0.01,
                  hl_in=0, hl_out=0, momentum=0.0, rate_decay=0.0, verbose=False):
         """
         :param input: number of input neurons
@@ -49,7 +46,7 @@ class MultilayerPerceptron(object):
         self.ao = np.ones(self.output)
 
         # Create randomized weights
-        # Use scheme from Efficient Backpropagation by LeCun 1998 to initialize weights for hidden layer
+        # Use scheme from efficient Backpropagation by LeCun 1998 to initialize weights for hidden layer
         input_range = 1.0 / self.input ** (1/2)
         self.wi = np.random.normal(loc = 0, scale = input_range, size = (self.input, self.hidden))
         self.wo = np.random.uniform(size = (self.hidden, self.output)) / np.sqrt(self.hidden)
@@ -155,9 +152,8 @@ class MultilayerPerceptron(object):
             e = self.get_age(p[1])
             l = self.feedForward(p[0])
             c = self.get_age(l)
-            #print(e[0], '->', sum(c) / len(c), "===", c)
             self.error_edad += abs((e[0] - (sum(c) / len(c))))
-        print "Error Total: " + str(self.error_edad / len(patterns))
+        print "Total error: " + str(self.error_edad / len(patterns))
 
     def fit(self, patterns):
         """
@@ -200,73 +196,3 @@ class MultilayerPerceptron(object):
         return [i + 1 for i, j in enumerate(a) if j == max(a)]
 
 
-def run():
-    """
-    Fit neural network
-    """
-    def load_data(validate = False):
-        #data = np.loadtxt('sklearn_digits.csv', delimiter = ',')
-
-        # first ten values are the one hot encoded y (target) values
-        fd = FaceDetector.FaceDetector()
-        if validate == True:
-            #pat = fd.getData(face=False, nose=False, proportions=True, validate=True)
-            pat = fd.getData(face=False, nose=True, proportions=False, validate=True)
-        else:
-            #pat = fd.getData(face=False, nose=False, proportions=True, validate=False)
-            pat = fd.getData(face=False, nose=True, proportions=False, validate=False)
-
-        #y = data[:,0:10]
-        y = pat[:,0:fd.segments - fd.margin]
-        #print y
-
-        #data = data[:,10:] # x data
-        data = pat[:,fd.segments - fd.margin:]
-        #print "Data"
-        #print data
-
-        data = scale(data)
-
-        out = []
-
-        # populate the tuple list with the data
-        for i in range(data.shape[0]):
-            tupledata = list((data[i,:].tolist(), y[i].tolist())) # don't mind this variable name
-            out.append(tupledata)
-
-        return out
-
-    X = load_data()
-
-    #print X[2] # make sure the data looks right
-
-    fd = FaceDetector.FaceDetector()
-    proportions = False
-    face = False
-    if proportions:
-        input_layer_length = 3
-        hidden_layer_length = 200
-    else:
-        if face:
-            input_layer_length = fd.pixelsFace * fd.pixelsFace
-            hidden_layer_length = fd.pixelsFace * fd.pixelsFace
-        else:
-            input_layer_length = fd.pixelsNose * fd.pixelsNose
-            hidden_layer_length = fd.pixelsNose * fd.pixelsNose
-
-    nn = MultilayerPerceptron(input_layer_length,
-                        hidden_layer_length,
-                        fd.segments - fd.margin,
-                        iterations=50,
-                        learning_rate=0.005,
-                        momentum=0.001,
-                        rate_decay=0.0001)
-    nn.fit(X)
-
-    nn.test(X)
-    Z = load_data(True)
-    print "Test validation"
-    nn.test(Z)
-
-if __name__ == '__main__':
-    run()
