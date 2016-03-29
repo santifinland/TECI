@@ -6,15 +6,19 @@
 
 
 import cv2
+import perceptron
 import numpy as np
 import Point
 import random
-import sys, traceback
+from sklearn.preprocessing import scale
 
 
-class FaceDetector:
+class FaceDetector(object):
 
-    def __init__(self):
+    def __init__(self, segments=10, margin=3, elementsPerSegment=50, sobremuestreo=False,
+                 fileTrain="train1.csv", fileValidate="validate1.csv", fileTest="test.csv",
+                 fileProportionsNose="proportionnose.csv", fileDistancesEyeNose="distancenoseeye.csv",
+                 fileDistancesMouthNose="distancemouthnose.csv"):
         self.cascPathFace = "haarcascade_frontalface_default.xml"
         self.cascPathMouth = "haarcascade_mcs_mouth.xml"
         self.cascPathSmile = "haarcascade_smile.xml"
@@ -25,23 +29,23 @@ class FaceDetector:
         self.cascPathRightEar = "haarcascade_mcs_rightear.xml"
         self.cascPathLeftEar = "haarcascade_mcs_leftear.xml"
         self.pixels = 50.0
-        self.pixelsFace = 0.0
+        self.pixelsFace = 100.0
         self.pixelsNose = 50.0
         self.faces = 4000.0
         self.maxItems = 4000.0
         self.fileGroundTruth = "train_gt.csv"
-        self.fileTrain = "train1.csv"
-        self.fileValidate = "validate1.csv"
-        self.fileTest = "test.csv"
-        self.fileProportionsNose = "proportionnose.csv"
-        self.fileDistancesEyeNose = "distancenoseeye.csv"
-        self.fileDistancesMouthNose = "distancemouthnose.csv"
-        self.segments = 100
-        self.margin = 30
-        self.elementsPerSegment = 15
-        self.sobremuestreo = True
+        self.fileTrain = fileTrain
+        self.fileValidate = fileValidate
+        self.fileTest = fileTest
+        self.fileProportionsNose = fileProportionsNose
+        self.fileDistancesEyeNose = fileDistancesEyeNose
+        self.fileDistancesMouthNose = fileDistancesMouthNose
+        self.segments = segments
+        self.margin = margin
+        self.elementsPerSegment = elementsPerSegment
+        self.sobremuestreo = sobremuestreo
 
-    ''' Load image in to memory '''
+    ''' Load image into memory '''
     def getimage(self, path):
         image = cv2.imread(path)
         return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -359,11 +363,10 @@ class FaceDetector:
         selected = [i for i,x in enumerate(ages) if x == age]
         return data[random.choice(selected), ]
 
-
     '''                                                          '''
     ''' Get matrix of data to train or validate a neural network '''
     '''                                                          '''
-    def getData(self, face=False, nose=False, proportions=True, validate=False):
+    def getData(self, face=False, nose=False, proportions=False, validate=False):
 
         # Read lines from train or validation file
         path = self.fileTrain
@@ -399,21 +402,13 @@ class FaceDetector:
                     age = self.getage("../../../img/" + trio[0], self.fileValidate)
 
                 # Code the age in a binary array
-                #a = self.getagecoded(age)
                 a = self.getagecodedToSegment(age, self.segments)
 
-                #ages_counter = [sum(x) for x in zip(ages, a)]
-                #print "==="
-                #print age
-                #print a
-                #print ages[int(round(float(self.getAgeToSegment(age, self.segments))))]
-                #if max(ages) < 16:
                 if ages[int(round(float(self.getAgeToSegment(age, self.segments))))] < self.elementsPerSegment:
                     vface = self.rawimage2vector("../../../img/resizedface/" + str(trio[0]))
                     vnose = self.rawimage2vector("../../../img/resizednose/" + str(trio[0]))
                     vproportions = self.getVectorOfProportions(str(trio[0]))
                     ages = [sum(x) for x in zip(ages, a)]
-                    #print ages
                     if face and nose:
                         pat[i] = a + vface + vnose
                     elif face:
@@ -425,24 +420,17 @@ class FaceDetector:
                     i = i + 1
             except Exception:
                 continue
-                #print "Fallo"
-                #traceback.print_exc(file=sys.stdout)
-        print ages
         if (not validate) & (self.sobremuestreo):
             (pat, i, ages) = self.fillWithSameData(pat, ages, i)
         pat = pat[:][:i]
-        print ages
         return pat[:,1:]
 
     def fillWithSameData(self, data, ages, i):
         for age in range(1,self.segments):
-            print "Age: " + str(age)
             try:
                 diff =  ages[int(round(float(self.getAgeToSegment(age, self.segments))))] - self.elementsPerSegment
-                print "Diff: " + str(diff)
                 if diff < 0:
                     for j in range(-diff):
-                        print "J: " + str(j)
                         data[i] = self.getDataFromAge(data, age)
                         a = self.getagecodedToSegment(age, self.segments)
                         ages = [sum(x) for x in zip(ages, a)]
@@ -453,7 +441,71 @@ class FaceDetector:
                 continue
         return (data, i, ages)
 
-#fd = FaceDetector()
-#data = fd.getData(face=False, nose=False, proportions=True, validate=False)
-#fd.getDataFromAge(data, 1)
-#fd.getagecodedToSegment(15, 20.0)
+
+def run():
+
+    """
+    Load patterns for training or validation
+    """
+    def load_data(validate=False):
+
+        # Get pattern: age and  proportions or nose pixels or face pixels
+        pat = fd.getData(face=face, nose=nose, proportions=proportions, validate=validate)
+
+        # Get tagged age in vector format
+        y = pat[:,0:fd.segments - fd.margin]
+
+        # Get data: proportions or nose pixels or face pixels
+        data = pat[:,fd.segments - fd.margin:]
+
+        # Scale the data
+        data = scale(data)
+
+        # Populate a tuple list to be returned with the data
+        out = []
+        for i in range(data.shape[0]):
+            out.append(list((data[i,:].tolist(), y[i].tolist())))
+
+        return out
+
+    # Selector for model: proportions, nose or face based
+    proportions = True
+    face = False
+    nose = False
+
+    # Instantiate FaceDetector class
+    fd = FaceDetector()
+
+    # Set neural network dimensions
+    if proportions:
+        input_layer_length = 3
+        hidden_layer_length = 200
+    else:
+        if face:
+            input_layer_length = fd.pixelsFace * fd.pixelsFace
+            hidden_layer_length = fd.pixelsFace * fd.pixelsFace
+        else:
+            input_layer_length = fd.pixelsNose * fd.pixelsNose
+            hidden_layer_length = fd.pixelsNose * fd.pixelsNose
+
+    # Instantiate neural network with selected parameters
+    nn = perceptron.MultilayerPerceptron(input_layer_length,
+                              hidden_layer_length,
+                              fd.segments - fd.margin,
+                              iterations=50,
+                              learning_rate=0.005,
+                              momentum=0.001,
+                              rate_decay=0.0001)
+
+    # Train neural network and validate against train data
+    x = load_data()
+    nn.fit(x)
+    nn.test(x)
+
+    # Validate against validation data
+    v = load_data(True)
+    print "Test validation"
+    nn.test(v)
+
+if __name__ == '__main__':
+    run()
