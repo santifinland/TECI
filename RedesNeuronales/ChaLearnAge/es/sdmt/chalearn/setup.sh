@@ -19,14 +19,14 @@ curl -L -o distancemouthnose.csv https://www.dropbox.com/s/jg27zne4eq0r2rf/dista
 
 
 # Get haarscade masks
-wget https://raw.githubusercontent.com/Itseez/opencv/tree/master/data/haarcascades/haarcascade_frontalface_default.xml
-wget https://raw.githubusercontent.com/Itseez/opencv/tree/master/data/haarcascades/haarcascade_mcs_mouth.xml
-wget https://raw.githubusercontent.com/Itseez/opencv/tree/master/data/haarcascades/haarcascade_smile.xml
-wget https://raw.githubusercontent.com/Itseez/opencv/tree/master/data/haarcascades/haarcascade_righteye_2splits.xml
-wget https://raw.githubusercontent.com/Itseez/opencv/tree/master/data/haarcascades/haarcascade_lefteye_2splits.xml
-wget https://raw.githubusercontent.com/Itseez/opencv/tree/master/data/haarcascades/haarcascade_mcs_nose.xml
-wget https://raw.githubusercontent.com/Itseez/opencv/tree/master/data/haarcascades/haarcascade_lowerbody.xml
-wget https://raw.githubusercontent.com/Itseez/opencv/tree/master/data/haarcascades/haarcascade_mcs_rightear.xml
-wget https://raw.githubusercontent.com/Itseez/opencv/tree/master/data/haarcascades/haarcascade_mcs_leftear.xml
+wget https://raw.githubusercontent.com/Itseez/opencv/master/data/haarcascades/haarcascade_frontalface_default.xml
+wget https://raw.githubusercontent.com/Itseez/opencv/master/data/haarcascades/haarcascade_mcs_mouth.xml
+wget https://raw.githubusercontent.com/Itseez/opencv/master/data/haarcascades/haarcascade_smile.xml
+wget https://raw.githubusercontent.com/Itseez/opencv/master/data/haarcascades/haarcascade_righteye_2splits.xml
+wget https://raw.githubusercontent.com/Itseez/opencv/master/data/haarcascades/haarcascade_lefteye_2splits.xml
+wget https://raw.githubusercontent.com/Itseez/opencv/master/data/haarcascades/haarcascade_mcs_nose.xml
+wget https://raw.githubusercontent.com/Itseez/opencv/master/data/haarcascades/haarcascade_lowerbody.xml
+wget https://raw.githubusercontent.com/Itseez/opencv/master/data/haarcascades/haarcascade_mcs_rightear.xml
+wget https://raw.githubusercontent.com/Itseez/opencv/master/data/haarcascades/haarcascade_mcs_leftear.xml
 
 
