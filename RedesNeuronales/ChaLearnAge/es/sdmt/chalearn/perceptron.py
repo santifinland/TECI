@@ -152,6 +152,7 @@ class MultilayerPerceptron(object):
             e = self.get_age(p[1])
             l = self.feedForward(p[0])
             c = self.get_age(l)
+            print(e[0], '->', sum(c) / len(c), "===", c)
             self.error_edad += abs((e[0] - (sum(c) / len(c))))
         print "Total error: " + str(self.error_edad / len(patterns))
 
