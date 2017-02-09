@@ -27,3 +27,7 @@
 
 # Python
 *.pyc
+
+# Scala targets
+MundoInterconectado/target/*
+MundoInterconectado/project/*
